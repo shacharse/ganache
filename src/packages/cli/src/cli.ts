@@ -142,5 +142,5 @@ async function startGanache(err: Error) {
     }
   }
 }
-console.log("Starting RPC server");
+console.log("Starting ALEK RPC server");
 server.listen(cliSettings.port, cliSettings.host, startGanache);

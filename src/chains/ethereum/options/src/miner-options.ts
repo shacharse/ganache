@@ -223,13 +223,7 @@ const toNumberOrString = (str: string) => {
 
 export const MinerOptions: Definitions<MinerConfig> = {
   blockTime: {
-    normalize: rawInput => {
-      if (rawInput < 0) {
-        throw new Error("miner.blockTime must be 0 or a positive number.");
-      }
-
-      return rawInput;
-    },
+    normalize,
     cliDescription:
       'Sets the `blockTime` in seconds for automatic mining. A blockTime of `0` enables "instamine mode", where new executable transactions will be mined instantly.',
     default: () => 0,
