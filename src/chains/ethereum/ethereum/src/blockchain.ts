@@ -249,6 +249,9 @@ export default class Blockchain extends Emittery<BlockchainTypedEvents> {
         );
       }
 
+      
+      // ALEK: I added this, so 'latest' block will appear and new block won't be created. Further solution doen't work
+      // await database.blockIndexes.put(BUFFER_ZERO, this.fallback.blockNumber.toBuffer())
       const blocks = (this.blocks = await BlockManager.initialize(
         this,
         common,
@@ -275,6 +278,7 @@ export default class Blockchain extends Emittery<BlockchainTypedEvents> {
       {
         let stateRoot: Data | null;
         if (latest) {
+          //ALEK: Should use latest block as genesis instead of creating new one (see later at this.#initializeGenesisBlock)
           this.#blockBeingSavedPromise = Promise.resolve({
             block: latest,
             blockLogs: null
@@ -355,27 +359,30 @@ export default class Blockchain extends Emittery<BlockchainTypedEvents> {
         });
         //#endregion
 
+        //ALEK: In order to have manual mining only, we need to skip the entire region
         //#region automatic mining
-        const nullResolved = Promise.resolve(null);
-        const mineAll = (maxTransactions: Capacity, onlyOneBlock?: boolean) =>
-          this.#isPaused()
-            ? nullResolved
-            : this.mine(maxTransactions, onlyOneBlock);
-        if (instamine) {
-          // insta mining
-          // whenever the transaction pool is drained mine the txs into blocks
-          // only one transaction should be added per block
-          txPool.on("drain", mineAll.bind(null, Capacity.Single));
-        } else {
-          // interval mining
-          const wait = () =>
-            (this.#timer = setTimeout(next, minerOpts.blockTime * 1e3));
-          // when interval mining, only one block should be mined. the block
-          // can, however, be filled
-          const next = () => {
-            mineAll(Capacity.FillBlock, true).then(wait);
-          };
-          wait();
+        if(minerOpts.blockTime >= 0) {
+          const nullResolved = Promise.resolve(null);
+          const mineAll = (maxTransactions: Capacity, onlyOneBlock?: boolean) =>
+            this.#isPaused()
+              ? nullResolved
+              : this.mine(maxTransactions, onlyOneBlock);
+          if (instamine) {
+            // insta mining
+            // whenever the transaction pool is drained mine the txs into blocks
+            // only one transaction should be added per block
+            txPool.on("drain", mineAll.bind(null, Capacity.Single));
+          } else {
+            // interval mining
+            const wait = () =>
+              (this.#timer = setTimeout(next, minerOpts.blockTime * 1e3));
+            // when interval mining, only one block should be mined. the block
+            // can, however, be filled
+            const next = () => {
+              mineAll(Capacity.FillBlock, true).then(wait);
+            };
+            wait();
+          }
         }
         //#endregion
 
