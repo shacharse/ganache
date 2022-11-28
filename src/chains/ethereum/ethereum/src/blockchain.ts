@@ -1459,6 +1459,27 @@ export default class Blockchain extends Emittery<BlockchainTypedEvents> {
     return newBlock;
   };
 
+  freezeAccountInTime(addy: Address): boolean | PromiseLike<boolean> {
+    if (this.fallback) {
+      this.fallback.freezeAccountInTime(addy);
+      return true
+    }
+    return false
+  }
+
+  setStorageAt(address: Address, position: Buffer, blockNumber: Quantity, result: Buffer): boolean | PromiseLike<boolean> {
+    //TODO: Inject to trie, right now use fallback's cache as it is easier
+    if (this.fallback) {
+      this.fallback.injectJRpc('eth_getStorageAt', [
+          address.toString(), 
+          `0x${position.toString("hex")}`,
+          blockNumber.toString()], 
+        `0x${result.toString("hex")}`);
+      return true
+    }
+    return false
+  }
+
   /**
    * traceTransaction
    *

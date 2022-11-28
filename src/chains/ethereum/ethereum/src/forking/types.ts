@@ -8,4 +8,5 @@ export interface Handler {
   ) => Promise<T>;
   setCache: (cache: PersistentCache) => void;
   close: () => Promise<void>;
+  addToMemoryCache(request: { method: String; params: String[]; }, response: { jsonrpc: string; id: number; result: String; }): void;
 }

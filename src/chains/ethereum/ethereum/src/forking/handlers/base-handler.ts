@@ -145,12 +145,14 @@ export class BaseHandler {
     const cachedRequest = this.requestCache.get(key);
     if (cachedRequest !== undefined) return cachedRequest as Promise<T>;
 
+     //ALEK: Here how the jrpc response is fetched from cache by request
     const cachedValue = this.valueCache.get(key);
     if (cachedValue !== undefined) return JSON.parse(cachedValue).result as T;
   }
 
   async getFromSlowCache<T>(method: string, params: any[], key: string) {
     if (!this.persistentCache) return;
+    //ALEK: Here how the jrpc response is fetched from cache by request
     const raw = await this.persistentCache.get(method, params, key).catch(e => {
       if (e.notFound) return null;
       // I/O or other error, throw as things are getting weird and the cache may
@@ -232,5 +234,10 @@ export class BaseHandler {
   async close() {
     await Promise.all(this.fireForget.keys());
     this.persistentCache && (await this.persistentCache.close());
+  }
+  addToMemoryCache(request: { method: String; params: String[]; }, response: { jsonrpc: string; id: number; result: String; }): void {
+    const key = JSON.stringify(request)
+    const raw = Buffer.from(JSON.stringify(response))
+    this.valueCache.set(key, raw);
   }
 }

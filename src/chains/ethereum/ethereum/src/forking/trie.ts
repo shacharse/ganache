@@ -192,7 +192,7 @@ export class ForkTrie extends GanacheTrie {
     const { fallback } = this.blockchain;
 
     const number =
-      this.blockchain.fallback.selectValidForkBlockNumber(blockNumber);
+      this.blockchain.fallback.selectValidForkBlockNumber(blockNumber, address.toBuffer());
 
     // get nonce, balance, and code from the fork/fallback
     const codeProm = fallback.request<string>(GET_CODE, [address, number]);
@@ -246,7 +246,7 @@ export class ForkTrie extends GanacheTrie {
       [
         `0x${address.toString("hex")}`,
         `0x${key.toString("hex")}`,
-        this.blockchain.fallback.selectValidForkBlockNumber(blockNumber)
+        this.blockchain.fallback.selectValidForkBlockNumber(blockNumber, address)
       ]
     );
     if (!result) return null;

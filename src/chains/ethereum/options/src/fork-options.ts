@@ -89,6 +89,14 @@ export type ForkConfig = {
     };
 
     /**
+     * Fork only .
+     */
+    alignBlockNumber: {
+      type: boolean;
+      hasDefault: true;
+    };
+
+    /**
      * When the `fork.blockNumber` is set to "latest" (default), the number of
      * blocks before the remote node's "latest" block to fork from.
      */
@@ -372,6 +380,12 @@ Use the shorthand command \`ganache --fork\` to automatically fork from Mainnet 
     },
     defaultDescription: `Latest block number`
     //implies: ["url"]
+  },
+  alignBlockNumber: {
+    normalize,
+    default: () => false,
+    cliDescription: "align block",
+    cliType: "boolean"
   },
   preLatestConfirmations: {
     normalize,

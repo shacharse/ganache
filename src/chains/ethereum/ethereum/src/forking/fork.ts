@@ -44,6 +44,7 @@ export class Fork {
   #handler: Handler;
   #options: EthereumInternalOptions;
   #accounts: Account[];
+  public frozenAccounts: Set<string>;
   #hardfork: string;
 
   public blockNumber: Quantity;
@@ -56,6 +57,7 @@ export class Fork {
     const forkingOptions = options.fork;
     this.#hardfork = options.chain.hardfork;
     this.#accounts = accounts;
+    this.frozenAccounts = new Set<string>();
 
     const { url, network } = forkingOptions;
     if (url) {
@@ -199,6 +201,10 @@ export class Fork {
     );
   };
 
+  #isFrozen = (account: Address) => {
+    return this.frozenAccounts.has(account.toString())
+  }
+
   public async initialize() {
     let cacheProm: Promise<PersistentCache>;
     const {
@@ -265,7 +271,10 @@ export class Fork {
     return blockNumber.toBigInt() <= this.blockNumber.toBigInt();
   }
 
-  public selectValidForkBlockNumber(blockNumber: Quantity) {
+  public selectValidForkBlockNumber(blockNumber: Quantity, account: Buffer) {
+    if(this.#options.fork.alignBlockNumber && !this.#isFrozen(Address.from(account))) {
+      return blockNumber
+    }
     return this.isValidForkBlockNumber(blockNumber)
       ? blockNumber
       : this.blockNumber;
@@ -313,4 +322,20 @@ export class Fork {
       return common;
     }
   }
+
+  public freezeAccountInTime(addy: Address) {
+    this.frozenAccounts.add(addy.toString())
+  }
+  
+  public injectJRpc(method: String, params: String[], result: String) {
+    /**
+     * request {"method":"eth_chainId","params":[]}"
+     * response {jsonrpc: "2.0",id: 5, result: "0xb4b"}.toBuffer()
+     */
+    this.#handler.addToMemoryCache(
+      {method: method, params: params}, 
+      {jsonrpc: "2.0", id: 0, result: result}
+    )
+  }
+
 }

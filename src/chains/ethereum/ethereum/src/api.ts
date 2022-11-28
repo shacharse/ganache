@@ -3654,5 +3654,25 @@ export default class EthereumApi implements Api {
     };
   }
 
+  @assertArgLength(1)
+  async alek_freezeAccount(
+    address: DATA
+  ): Promise<boolean> {
+    const addy = new Address(address);
+    return this.#blockchain.freezeAccountInTime(addy);
+  }
+
+  @assertArgLength(4)
+  async alek_setStorageAt(
+    address: DATA,
+    position: QUANTITY,
+    blockNumber: QUANTITY,
+    result: DATA
+  ): Promise<Boolean> {
+    const addy = new Address(address);
+    return this.#blockchain.setStorageAt(addy, Quantity.toBuffer(position),
+      Quantity.from(Quantity.toNumber(blockNumber)), Data.toBuffer(result));
+  }
+
   //#endregion
 }
