@@ -3670,7 +3670,25 @@ export default class EthereumApi implements Api {
     result: DATA
   ): Promise<Boolean> {
     const addy = new Address(address);
-    return this.#blockchain.setStorageAt(addy, Quantity.toBuffer(position),
+
+    // Copied from eth_getStorageAt
+    const posBuff = Quantity.toBuffer(position);
+    const length = posBuff.length;
+    let paddedPosBuff: Buffer;
+    if (length < 32) {
+      // storage locations are 32 bytes wide, so we need to expand any value
+      // given to 32 bytes.
+      paddedPosBuff = Buffer.allocUnsafe(32).fill(0);
+      posBuff.copy(paddedPosBuff, 32 - length);
+    } else if (length === 32) {
+      paddedPosBuff = posBuff;
+    } else {
+      // if the position value we're passed is > 32 bytes, truncate it. This is
+      // what geth does.
+      paddedPosBuff = posBuff.slice(-32);
+    }
+
+    return this.#blockchain.setStorageAt(addy, paddedPosBuff,
       Quantity.from(Quantity.toNumber(blockNumber)), Data.toBuffer(result));
   }
 
